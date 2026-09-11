@@ -69,7 +69,7 @@ app.post("/clip", auth, async (req, res) => {
     await run("yt-dlp", [
       "--download-sections", section,
       "--force-keyframes-at-cuts",
-      "-f", "bestvideo[height<=1080][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=1080][vcodec^=avc1]/best[height<=1080]/best",
+      "-f", "bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=720][vcodec^=avc1]/best[height<=720]/best",
       "--merge-output-format", "mp4",
       "--no-playlist",
       "--no-warnings",
@@ -88,13 +88,12 @@ app.post("/clip", auth, async (req, res) => {
       : "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1";
 
     await run("ffmpeg", [
-      "-y", "-i", rawPath,
+      "-y", "-threads", "1", "-i", rawPath,
       "-vf", vf,
       "-r", "30",
-      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-threads", "2",
       "-c:a", "aac", "-b:a", "128k",
       "-movflags", "+faststart",
-      "-threads", "2",
       outPath
     ]);
 
