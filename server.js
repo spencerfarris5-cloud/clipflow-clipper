@@ -69,8 +69,8 @@ app.post("/clip", auth, async (req, res) => {
     await run("yt-dlp", [
       "--download-sections", section,
       "--force-keyframes-at-cuts",
-      "--extractor-args", "youtube:player_client=android",
-      "-f", "bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=720][vcodec^=avc1]/best[height<=720]/best",
+      "--extractor-args", "youtube:player_client=android,web",
+      "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
       "--merge-output-format", "mp4",
       "--no-playlist",
       "--no-warnings",
@@ -92,7 +92,7 @@ app.post("/clip", auth, async (req, res) => {
       "-y", "-threads", "1", "-i", rawPath,
       "-vf", vf,
       "-r", "30",
-      "-c:v", "libx264", "-threads", "1", "-preset", "veryfast", "-crf", "23",
+      "-c:v", "libx264", "-threads", "1", "-preset", "ultrafast", "-tune", "zerolatency", "-crf", "23",
       "-c:a", "aac", "-b:a", "128k",
       "-movflags", "+faststart",
       outPath
