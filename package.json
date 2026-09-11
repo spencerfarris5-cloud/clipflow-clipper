@@ -1,0 +1,12 @@
+{
+  "name": "clipflow-clipper",
+  "version": "1.0.0",
+  "description": "Self-hosted YouTube clip renderer for ClipFlow.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}
