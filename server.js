@@ -12,8 +12,9 @@ app.use(express.json({ limit: "1mb" }));
 
 const AUTH_TOKEN = process.env.CLIPPER_SERVICE_TOKEN || "";
 
+// Simple shared-secret auth
 function auth(req, res, next) {
-  if (!AUTH_TOKEN) return next();
+  if (!AUTH_TOKEN) return next(); // no token set = open (fine while testing)
   const provided = req.headers["x-clipper-token"];
   if (provided !== AUTH_TOKEN) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -39,6 +40,7 @@ function run(cmd, args, opts = {}) {
         resolve(stdout);
       }
     });
+    // surface progress in logs
     proc.stderr && proc.stderr.on("data", (d) => process.stdout.write(`[ffmpeg/yt-dlp] ${d}`));
   });
 }
@@ -62,11 +64,12 @@ app.post("/clip", auth, async (req, res) => {
   const outPath = path.join(workDir, "clip.mp4");
 
   try {
+    // 1. Download just the requested section with audio using yt-dlp
     const section = `*${fmtTime(startSec)}-${fmtTime(endSec)}`;
     await run("yt-dlp", [
       "--download-sections", section,
       "--force-keyframes-at-cuts",
-      "-f", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+      "-f", "bestvideo[height<=1080][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=1080][vcodec^=avc1]/best[height<=1080]/best",
       "--merge-output-format", "mp4",
       "--no-playlist",
       "--no-warnings",
@@ -75,9 +78,10 @@ app.post("/clip", auth, async (req, res) => {
     ]);
 
     if (!fs.existsSync(rawPath)) {
-      throw new Error("Download failed");
+      throw new Error("Download failed — yt-dlp produced no file");
     }
 
+    // 2. Re-encode with ffmpeg. Vertical (9:16) gets blurred-fill background.
     const isVertical = orientation === "vertical";
     const vf = isVertical
       ? "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
