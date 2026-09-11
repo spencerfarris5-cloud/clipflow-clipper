@@ -69,7 +69,8 @@ app.post("/clip", auth, async (req, res) => {
     await run("yt-dlp", [
       "--download-sections", section,
       "--force-keyframes-at-cuts",
-      "-f", "bestvideo[height<=720][vcodec^=avc1]+bestaudio[acodec^=mp4a]/best[height<=720][vcodec^=avc1]/best[height<=720]/best",
+      "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
+      "-S", "vcodec:h264,res:720",
       "--merge-output-format", "mp4",
       "--no-playlist",
       "--no-warnings",
@@ -84,14 +85,14 @@ app.post("/clip", auth, async (req, res) => {
     // 2. Re-encode with ffmpeg. Vertical (9:16) gets blurred-fill background.
     const isVertical = orientation === "vertical";
     const vf = isVertical
-      ? "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
-      : "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1";
+      ? "scale=720:1280:force_original_aspect_ratio=decrease,pad=720:1280:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1"
+      : "scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2:color=black,setsar=1";
 
     await run("ffmpeg", [
       "-y", "-threads", "1", "-i", rawPath,
       "-vf", vf,
       "-r", "30",
-      "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-threads", "2",
+      "-c:v", "libx264", "-x264-params", "threads=2", "-preset", "veryfast", "-crf", "23",
       "-c:a", "aac", "-b:a", "128k",
       "-movflags", "+faststart",
       outPath
