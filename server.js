@@ -69,7 +69,7 @@ app.post("/clip", auth, async (req, res) => {
     await run("yt-dlp", [
       "--download-sections", section,
       "--force-keyframes-at-cuts",
-      "--extractor-args", "youtube:player_client=android,web",
+      "-S", "res:720,vcodec:h264",
       "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]/best",
       "--merge-output-format", "mp4",
       "--no-playlist",
